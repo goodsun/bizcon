@@ -49,6 +49,16 @@ function checkUser() external view returns (string memory) {
 		return val;
     }
 
+	function chkCreatorExist(address account) internal view returns (bool) {
+		bool val = false;
+		for (uint i = 0; i < _creators.length; i++) {
+            if (_creators[i] == account) {
+				val = true;
+			}
+        }
+		return val;
+    }
+
     function isEOA(address account) internal view returns (bool) {
         uint size;
         assembly {
@@ -83,7 +93,7 @@ function checkUser() external view returns (string memory) {
     	return (_admins, _admins.length);
 	}
 
-	function setCreator(address account) external {
+	function setCreator(address account, string memory name, string memory typename) external {
 		require(chkAdmin() ,"You can't set creator.");
 		for (uint i = 0; i < _creators.length; i++) {
             if (_creators[i] == account) {
@@ -91,22 +101,63 @@ function checkUser() external view returns (string memory) {
             }
         }
 		_creators.push(account);
+		_names[account] = name;
+		_types[account] = typename;
+		_public[account] = true;
+	}
+
+	function setCreatorInfo(address account, string memory name, string memory typename) external {
+		require(chkAdmin() ,"You can't set contract.");
+		require(chkCreatorExist(account) ,"it's not exist.");
+		_names[account] = name;
+		_types[account] = typename;
+	}
+
+	function publicCreator(address account) external {
+		require(chkAdmin() ,"You can't set contract.");
+		require(!_public[account] ,"it's already public");
+		require(chkCreatorExist(account) ,"it's not exist.");
+		_public[account] = true;
+	}
+
+	function hiddenCreator(address account) external {
+		require(chkAdmin() ,"You can't set contract.");
+		require(_public[account] ,"it's already hidden");
+		require(chkCreatorExist(account) ,"it's not exist.");
+		_public[account] = false;
 	}
 
 	function delCreator(address account) external {
         require(chkAdmin() ,"You can't delete creator.");
-		for (uint i = 0; i < _creators.length; i++) {
-            if (_creators[i] == account) {
-                _creators[i] = _creators[_creators.length - 1];
-                _creators.pop();
-                return;
-            }
-        }
+		require(chkCreatorExist(account), "It's not exist.");
+	    for (uint256 i = 0; i < _creators.length; i++) {
+			if (_creators[i] == account) {
+				delete _names[_creators[i]];
+				delete _types[_creators[i]];
+				delete _public[_creators[i]];
+				_creators[i] = _creators[_creators.length - 1];
+				_creators.pop();
+				break;
+			}
+		}
 	}
 
-	function getCreators() public view returns (address[] memory, uint256){
-    	return (_creators, _creators.length);
-	}
+	function getAllCreators() public view returns (address[] memory, string[] memory, string[] memory, bool[] memory) {
+        uint256 length = _creators.length;
+        address[] memory addresses = new address[](length);
+        string[] memory names = new string[](length);
+        string[] memory types = new string[](length);
+        bool[] memory publicStatus = new bool[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            addresses[i] = _creators[i];
+            names[i] = _names[_creators[i]];
+            types[i] = _types[_creators[i]];
+            publicStatus[i] = _public[_creators[i]];
+        }
+
+        return (addresses, names, types, publicStatus);
+    }
 
 
 	function setContract(address account, string memory name, string memory typename) external {
@@ -123,14 +174,14 @@ function checkUser() external view returns (string memory) {
 		_public[account] = true;
 	}
 
-	function setCountractInfo(address account, string memory name, string memory typename) external {
+	function setContractInfo(address account, string memory name, string memory typename) external {
 		require(chkAdmin() ,"You can't set contract.");
 		require(chkExist(account) ,"it's not exist.");
 		_names[account] = name;
 		_types[account] = typename;
 	}
 
-	function publicCountract(address account) external {
+	function publicContract(address account) external {
 		require(chkAdmin() ,"You can't set contract.");
 		require(!_public[account] ,"it's already public");
 		require(chkExist(account) ,"it's not exist.");
@@ -144,8 +195,8 @@ function checkUser() external view returns (string memory) {
 		_public[account] = false;
 	}
 
-	function getContract(address account) external view returns (address, string memory, bool) {
-		return (account, _names[account], _public[account]);
+	function getContract(address account) external view returns (address, string memory, string memory, bool) {
+		return (account, _names[account], _types[account], _public[account]);
 	}
 
     function getAllContracts() public view returns (address[] memory, string[] memory, string[] memory, bool[] memory) {
