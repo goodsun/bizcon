@@ -15,6 +15,8 @@ contract donateManage {
     uint256[] public _useDates;
     mapping(address => uint256) public _totalDonations;
     mapping(address => uint256) public _usedPoints;
+    uint256 public _allTotalDonations;
+    uint256 public _allUsedPoints;
 
     constructor() {
         _owner = msg.sender;
@@ -73,15 +75,20 @@ contract donateManage {
         _donationAmounts.push(msg.value);
         _donationDates.push(block.timestamp);
         _totalDonations[donor] += msg.value;
+        _allTotalDonations += msg.value;
     }
 
     function usePoint(address donor, uint256 usepoint) external {
-        require(_totalDonations[donor] - _usedPoints[donor] > usepoint ,"not enough points");
+        require(
+            _totalDonations[donor] - _usedPoints[donor] > usepoint,
+            "not enough points"
+        );
         _lastUseId++;
         _useDonors.push(donor);
         _usePoints.push(usepoint);
         _useDates.push(block.timestamp);
         _usedPoints[donor] += usepoint;
+        _allUsedPoints += usepoint;
     }
 
     function latestPoint(address donor) external view returns (uint256) {
@@ -89,10 +96,47 @@ contract donateManage {
     }
 
     function withdraw(uint256 amount) external onlyOwner {
-        require(address(this).balance >= amount, "Insufficient balance in contract");
+        require(
+            address(this).balance >= amount,
+            "Insufficient balance in contract"
+        );
         (bool sent, ) = payable(msg.sender).call{value: amount}("");
         require(sent, "Failed to send Ether");
     }
 
-    // Additional helper functions for managing admins can be added here
+    function totalSupply() external view returns (uint256) {
+        return _allTotalDonations - _allUsedPoints;
+    }
+
+    function balanceOf(address account) external view returns (uint256) {
+        return _totalDonations[account] - _usedPoints[account];
+    }
+    function transfer(
+        address /* recipient */,
+        uint256 /* amount */
+    ) external pure returns (bool) {
+        revert("Token transfers are disabled");
+    }
+
+    function allowance(
+        address /* owner */,
+        address /* spender */
+    ) external pure returns (uint256) {
+        return 0;
+    }
+
+    function approve(
+        address /* spender */,
+        uint256 /* amount */
+    ) external pure returns (bool) {
+        revert("Token approvals are disabled");
+    }
+
+    function transferFrom(
+        address /* sender */,
+        address /* recipient */,
+        uint256 /* amount */
+    ) external pure returns (bool) {
+        revert("Token transfers are disabled");
+    }
 }
