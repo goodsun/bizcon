@@ -60,12 +60,20 @@ contract donateManage {
         }
     }
 
+    receive() external payable {
+        require(msg.value > 0, "Please send some Ether");
+        donate(msg.sender);
+    }
+
     function donate(address donor) public payable {
         require(msg.value > 0, "Donation amount must be greater than zero");
-        uint256 gasCashback = msg.value / _cashBackRate;
-        uint256 donateAmount = msg.value - gasCashback;
-        (bool success, ) = payable(donor).call{value: gasCashback}("");
-        require(success, "Failed to send gas cashback");
+        uint256 donateAmount = msg.value;
+        if (msg.sender != donor) {
+            uint256 gasCashback = msg.value / _cashBackRate;
+            donateAmount = msg.value - gasCashback;
+            (bool success, ) = payable(donor).call{value: gasCashback}("");
+            require(success, "Failed to send gas cashback");
+        }
         _lastDonateId++;
         _donors.push(donor);
         _senders.push(msg.sender);
