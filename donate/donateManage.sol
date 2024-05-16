@@ -17,10 +17,12 @@ contract donateManage {
     mapping(address => uint256) public _usedPoints;
     uint256 public _allTotalDonations;
     uint256 public _allUsedPoints;
+    uint256 public _cashBackRate;
 
     constructor() {
         _owner = msg.sender;
         _admins.push(msg.sender);
+        _cashBackRate = 100;
     }
 
     modifier onlyOwner() {
@@ -60,22 +62,17 @@ contract donateManage {
 
     function donate(address donor) public payable {
         require(msg.value > 0, "Donation amount must be greater than zero");
-
-        // Calculate gas cashback (1% of donation amount)
-        uint256 gasCashback = msg.value / 100;
-
-        // Send gas cashback to donor
+        uint256 gasCashback = msg.value / _cashBackRate;
+        uint256 donateAmount = msg.value - gasCashback;
         (bool success, ) = payable(donor).call{value: gasCashback}("");
         require(success, "Failed to send gas cashback");
-
-        // Record donation
         _lastDonateId++;
         _donors.push(donor);
         _senders.push(msg.sender);
-        _donationAmounts.push(msg.value);
+        _donationAmounts.push(donateAmount);
         _donationDates.push(block.timestamp);
-        _totalDonations[donor] += msg.value;
-        _allTotalDonations += msg.value;
+        _totalDonations[donor] += donateAmount;
+        _allTotalDonations += donateAmount;
     }
 
     function usePoint(address donor, uint256 usepoint) external {
@@ -104,6 +101,11 @@ contract donateManage {
         require(sent, "Failed to send Ether");
     }
 
+    function setCashBackRate(uint256 rate) external onlyOwner {
+        require(rate >= 10, "Cashback rate is too low");
+        _cashBackRate = rate;
+    }
+
     function totalSupply() external view returns (uint256) {
         return _allTotalDonations - _allUsedPoints;
     }
@@ -111,6 +113,7 @@ contract donateManage {
     function balanceOf(address account) external view returns (uint256) {
         return _totalDonations[account] - _usedPoints[account];
     }
+
     function transfer(
         address /* recipient */,
         uint256 /* amount */
