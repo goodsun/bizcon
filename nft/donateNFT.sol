@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: Apache License 2.0
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "./RoyaltyStandard.sol";
-import "./donateManage.sol";
+import "../donate/donateManage.sol";
 
 contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     uint256 public _lastTokenId;

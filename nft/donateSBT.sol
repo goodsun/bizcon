@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "./donateManage.sol";
+import "../donate/donateManage.sol";
 
 contract donateSBT is ERC721Enumerable {
     address private _owner;
