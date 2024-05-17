@@ -9,11 +9,11 @@ contract donateSBT is ERC721Enumerable {
     uint256 public _lastTokenId;
     uint256 public _usePoint;
     mapping(uint256 => string) private _metaUrl;
-    address private _donateManageAddress;
+    address payable private _donateManageAddress;
     donateManage private _donateManageContract;
     mapping(uint256 => bool) private _lockedTokens;
 
-    constructor(address donateManageAddress, string memory _name, string memory _symbol)
+    constructor(address payable donateManageAddress, string memory _name, string memory _symbol)
         ERC721(_name, _symbol)
     {
         _owner = msg.sender;

@@ -12,14 +12,14 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     string private _name;
     uint256 public _usePoint;
     mapping(uint256 => string) private _metaUrl;
-    address private _donateManageAddress;
+    address payable private _donateManageAddress;
     donateManage private _donateManageContract;
 
     /*
     * name NFT名称
     * symbol 単位
     */
-    constructor(address donateManageAddress, string memory name, string memory symbol) ERC721(name, symbol) {
+    constructor(address payable donateManageAddress, string memory name, string memory symbol) ERC721(name, symbol) {
         _name = name;
 		_owner = msg.sender;
         _name = name;
