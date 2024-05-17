@@ -32,6 +32,11 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     * to 転送先
     * metaUrl メタ情報URL
     */
+    function mint(address to, string memory metaUrl) external {
+        //デフォルトを設定しfeeRateをオプショナルにする
+        mint(to, metaUrl , 0);
+    }
+
     function mint(address to, string memory metaUrl, uint256 feeRate)
     public {
         uint256 usepoint = _usePoint;
