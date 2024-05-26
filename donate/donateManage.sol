@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 // DonateManager
 contract donateManage {
-    address private _owner;
+    address public _owner;
     uint256 public _lastDonateId;
     uint256 public _lastUseId;
     address[] public _admins;
@@ -70,16 +70,20 @@ contract donateManage {
     function donate(address donor) public payable {
         require(msg.value > 0, "Donation amount must be greater than zero");
         uint256 donateAmount = msg.value;
+        _lastDonateId++;
+        _donors.push(donor);
+        _senders.push(msg.sender);
+        _donationAmounts.push(donateAmount);
+        _donationDates.push(block.timestamp);
+        _totalDonations[donor] += donateAmount;
+        _allTotalDonations += donateAmount;
+    }
+
+    function donate(address donor, uint256 gasCashback) public payable {
+        require(msg.value > 0, "Donation amount must be greater than zero");
+        require(msg.value > gasCashback, "Donation amount must be greater than Cashback");
+        uint256 donateAmount = msg.value;
         if (msg.sender != donor) {
-            uint256 gasCashback = 0;
-            if(_cashBackRate == 0){
-                if(msg.value >= (_cashBackStatic * 2)){
-                    gasCashback = _cashBackStatic;
-                }
-            }
-            if(_cashBackStatic == 0){
-                gasCashback = msg.value / _cashBackRate;
-            }
             donateAmount = msg.value - gasCashback;
             (bool success, ) = payable(donor).call{value: gasCashback}("");
             require(success, "Failed to send gas cashback");
