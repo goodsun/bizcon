@@ -5,7 +5,7 @@ import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/tok
 import "../donate/donateManage.sol";
 
 contract donateSBT is ERC721Enumerable {
-    address private _owner;
+    address public _owner;
     uint256 public _lastTokenId;
     uint256 public _usePoint;
     mapping(uint256 => string) private _metaUrl;
@@ -13,9 +13,11 @@ contract donateSBT is ERC721Enumerable {
     donateManage private _donateManageContract;
     mapping(uint256 => bool) private _lockedTokens;
 
-    constructor(address payable donateManageAddress, string memory _name, string memory _symbol)
-        ERC721(_name, _symbol)
-    {
+    constructor(
+        address payable donateManageAddress,
+        string memory _name,
+        string memory _symbol
+    ) ERC721(_name, _symbol) {
         _owner = msg.sender;
         _donateManageAddress = donateManageAddress;
         _donateManageContract = donateManage(_donateManageAddress);
@@ -25,7 +27,10 @@ contract donateSBT is ERC721Enumerable {
     function mint(address to, string memory metaUrl) external {
         uint256 usepoint = _usePoint;
         uint256 availablePoints = _donateManageContract.latestPoint(msg.sender);
-        require(availablePoints >= usepoint, "You do not have enough points to mint");
+        require(
+            availablePoints >= usepoint,
+            "You do not have enough points to mint"
+        );
 
         // Update usedPoints
         _donateManageContract.usePoint(msg.sender, usepoint);
@@ -36,13 +41,15 @@ contract donateSBT is ERC721Enumerable {
         _safeMint(to, tokenId);
     }
 
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override returns (string memory) {
         _requireMinted(tokenId);
         return string(abi.encodePacked(_metaUrl[tokenId]));
     }
 
-    function getInfo() external view returns (string memory, uint256) {
-        return ("free", _lastTokenId);
+    function getInfo() external view returns (address, uint256, bool) {
+        return (_owner, _lastTokenId, false);
     }
 
     function setConfig(uint256 usePoint) external {
@@ -51,22 +58,35 @@ contract donateSBT is ERC721Enumerable {
     }
 
     function burn(uint256 tokenId) external {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "Caller is not owner nor approved");
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            "Caller is not owner nor approved"
+        );
         _metaUrl[tokenId] = "";
         _burn(tokenId);
     }
 
     function lockTransfer(uint256 tokenId) external {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "Caller is not owner nor approved");
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            "Caller is not owner nor approved"
+        );
         _lockedTokens[tokenId] = true;
     }
 
     function unlockTransfer(uint256 tokenId) external {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "Caller is not owner nor approved");
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            "Caller is not owner nor approved"
+        );
         _lockedTokens[tokenId] = false;
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override {
         super._beforeTokenTransfer(from, to, tokenId);
         require(!_lockedTokens[tokenId], "Token transfer is locked");
     }

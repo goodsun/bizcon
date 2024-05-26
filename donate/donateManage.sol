@@ -17,14 +17,10 @@ contract donateManage {
     mapping(address => uint256) public _usedPoints;
     uint256 public _allTotalDonations;
     uint256 public _allUsedPoints;
-    uint256 public _cashBackRate;
-    uint256 public _cashBackStatic;
 
     constructor() {
         _owner = msg.sender;
         _admins.push(msg.sender);
-        _cashBackRate = 100;
-        _cashBackStatic = 0;
     }
 
     modifier onlyOwner() {
@@ -81,7 +77,10 @@ contract donateManage {
 
     function donate(address donor, uint256 gasCashback) public payable {
         require(msg.value > 0, "Donation amount must be greater than zero");
-        require(msg.value > gasCashback, "Donation amount must be greater than Cashback");
+        require(
+            msg.value > gasCashback,
+            "Donation amount must be greater than Cashback"
+        );
         uint256 donateAmount = msg.value;
         if (msg.sender != donor) {
             donateAmount = msg.value - gasCashback;
@@ -99,7 +98,7 @@ contract donateManage {
 
     function usePoint(address donor, uint256 usepoint) external {
         require(
-            _totalDonations[donor] - _usedPoints[donor] > usepoint,
+            _totalDonations[donor] - _usedPoints[donor] >= usepoint,
             "not enough points"
         );
         _lastUseId++;
@@ -121,31 +120,6 @@ contract donateManage {
         );
         (bool sent, ) = payable(msg.sender).call{value: amount}("");
         require(sent, "Failed to send Ether");
-    }
-
-    function setCashBackRate(uint256 rate) external onlyOwner {
-        require(rate >= 10, "Cashback rate is too low");
-        _cashBackRate = rate;
-        _cashBackStatic = 0;
-    }
-
-    function setCashBackStatic(uint256 price) external onlyOwner {
-        _cashBackRate = 0;
-        _cashBackStatic = price;
-    }
-
-    function checkCacheBack(uint256 donation) external view returns (uint256) {
-        uint256 gasCashback = 0;
-            if(_cashBackRate == 0){
-                if(donation >= (_cashBackStatic * 2)){
-                    gasCashback = _cashBackStatic;
-                }
-            }
-            if(_cashBackStatic == 0){
-                gasCashback = donation / _cashBackRate;
-            }
-
-        return gasCashback;
     }
 
     function totalSupply() external view returns (uint256) {

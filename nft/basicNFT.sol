@@ -3,12 +3,13 @@ pragma solidity ^0.8.0;
 import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/token/ERC721/ERC721.sol";
 import "./RoyaltyStandard.sol";
 
-contract freeNFT is ERC721, RoyaltyStandard {
+contract basicNFT is ERC721, RoyaltyStandard {
     bool public _creatorOnly;
-    uint256 public _lastTokenId;
     address public _creator;
+    uint256 public _lastTokenId;
     address private _owner;
     string private _name;
+    uint256 public _usePoint;
     uint256 private _feeRate;
     mapping(uint256 => string) private _metaUrl;
 
@@ -35,7 +36,7 @@ contract freeNFT is ERC721, RoyaltyStandard {
      */
     function mint(address to, string memory metaUrl) public {
         require(
-            (_creatorOnly  && (msg.sender != _creator || msg.sender != _owner)),
+            (!_creatorOnly || msg.sender == _creator || msg.sender == _owner),
             "this NFT is can mint creator only"
         );
         _lastTokenId++;
@@ -73,8 +74,8 @@ contract freeNFT is ERC721, RoyaltyStandard {
         _creatorOnly = creatorOnly;
     }
 
-    function getInfo() external view returns (string memory, uint256) {
-        return ("free", _lastTokenId);
+    function getInfo() external view returns (address, uint256, bool) {
+        return (_creator, _lastTokenId, _creatorOnly);
     }
 
     function burn(uint256 tokenId) external {
