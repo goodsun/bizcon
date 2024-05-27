@@ -11,6 +11,7 @@ contract Orders {
     uint256[] private dates;
     uint256[] private prices;
     string[] private urls;
+    string[] private filenames;
     mapping(address => uint256[]) private assets;
 
     constructor() {
@@ -62,15 +63,20 @@ contract Orders {
         dates.push(block.timestamp);
         prices.push(msg.value);
         urls.push("upload_waiting");
+        filenames.push("upload_waiting");
         assets[msg.sender].push(lastOrderNum);
         emit OrderPlaced(lastOrderNum, msg.sender, block.timestamp, msg.value, "upload_waiting");
         lastOrderNum++;
         return lastOrderNum - 1;
     }
 
-    function setUrl(uint256 orderNum, string memory url) external {
-        require(eoas[orderNum] == msg.sender, "Can't set URL. File owner only");
+    function setUrl(uint256 orderNum, string memory url, string memory filename) external {
+        require(
+            eoas[orderNum] == msg.sender || msg.sender == owner || isAdmin(msg.sender),
+            "Can't set URL. Only the file owner, an admin, or the owner can set the URL"
+        );
         urls[orderNum] = url;
+        filenames[orderNum] = filename;
     }
 
     function withdraw(uint256 amount) external onlyOwner {
@@ -90,20 +96,22 @@ contract Orders {
     }
 
     // Function to get order list by EOA
-    function getOrdersByEOA(address eoa) public view returns (uint256[] memory orderNums, uint256[] memory orderPrices, string[] memory orderUrls, uint256[] memory orderDates) {
+    function getOrdersByEOA(address eoa) public view returns (uint256[] memory orderNums, string[] memory orderFilenames, string[] memory orderUrls, uint256[] memory orderPrices, uint256[] memory orderDates) {
         uint256[] memory userOrders = assets[eoa];
         orderNums = new uint256[](userOrders.length);
-        orderPrices = new uint256[](userOrders.length);
+        orderFilenames = new string[](userOrders.length);
         orderUrls = new string[](userOrders.length);
+        orderPrices = new uint256[](userOrders.length);
         orderDates = new uint256[](userOrders.length);
 
         for (uint256 i = 0; i < userOrders.length; i++) {
             uint256 orderNum = userOrders[i];
             orderNums[i] = orderNum;
-            orderPrices[i] = prices[orderNum];
+            orderFilenames[i] = filenames[orderNum];
             orderUrls[i] = urls[orderNum];
+            orderPrices[i] = prices[orderNum];
             orderDates[i] = dates[orderNum];
         }
-        return (orderNums, orderPrices, orderUrls, orderDates);
+        return (orderNums, orderFilenames, orderUrls, orderPrices, orderDates);
     }
 }
