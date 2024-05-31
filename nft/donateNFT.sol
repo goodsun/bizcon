@@ -8,7 +8,7 @@ import "../donate/donateManage.sol";
 contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     uint256 public _lastTokenId;
     address public _creator;
-    address private _owner;
+    address public _owner;
     string private _name;
     uint256 public _usePoint;
     mapping(uint256 => string) private _metaUrl;

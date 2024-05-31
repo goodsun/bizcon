@@ -7,7 +7,7 @@ contract basicSBT is ERC5192 {
     bool public _creatorOnly;
     address public _creator;
     bool private isLocked;
-    address private _owner;
+    address public _owner;
     uint256 public _lastTokenId;
     mapping(uint256 => string) private _metaUrl;
 

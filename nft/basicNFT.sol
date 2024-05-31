@@ -7,7 +7,7 @@ contract basicNFT is ERC721, RoyaltyStandard {
     bool public _creatorOnly;
     address public _creator;
     uint256 public _lastTokenId;
-    address private _owner;
+    address public _owner;
     string private _name;
     uint256 public _usePoint;
     uint256 private _feeRate;

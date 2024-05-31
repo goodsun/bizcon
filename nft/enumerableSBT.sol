@@ -6,8 +6,7 @@ contract enumerableSBT is ERC721Enumerable {
     bool public _creatorOnly;
     address public _creator;
     uint256 public _lastTokenId;
-    address private _owner;
-    string private _name;
+    address public _owner;
     mapping(uint256 => string) private _metaUrl;
     mapping(uint256 => bool) private _lockedTokens;
 
@@ -20,10 +19,8 @@ contract enumerableSBT is ERC721Enumerable {
         string memory symbol,
         address creator
     ) ERC721(name, symbol) {
-        _name = name;
         _owner = msg.sender;
         _creator = creator;
-        _name = name;
     }
 
     /*
@@ -33,7 +30,7 @@ contract enumerableSBT is ERC721Enumerable {
     function mint(address to, string memory metaUrl) public {
         require(
             (!_creatorOnly || msg.sender == _creator || msg.sender == _owner),
-            "this NFT is can mint creator only"
+            "Only the creator can mint this NFT"
         );
         _lastTokenId++;
         uint256 tokenId = _lastTokenId;
@@ -55,13 +52,10 @@ contract enumerableSBT is ERC721Enumerable {
         uint256 tokenId
     ) public view virtual override returns (string memory) {
         _requireMinted(tokenId);
-        return string(abi.encodePacked(_metaUrl[tokenId]));
+        return _metaUrl[tokenId];
     }
 
-    function setConfig(
-        address creator,
-        bool creatorOnly
-    ) external {
+    function setConfig(address creator, bool creatorOnly) external {
         require(_owner == msg.sender, "Can't set. owner only");
         _creator = creator;
         _creatorOnly = creatorOnly;
@@ -79,7 +73,6 @@ contract enumerableSBT is ERC721Enumerable {
         _metaUrl[tokenId] = "";
         _burn(tokenId);
     }
-
 
     function lockTransfer(uint256 tokenId) external {
         require(

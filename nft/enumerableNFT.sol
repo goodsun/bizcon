@@ -7,8 +7,7 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
     bool public _creatorOnly;
     address public _creator;
     uint256 public _lastTokenId;
-    address private _owner;
-    string private _name;
+    address public _owner;
     uint256 private _feeRate;
     mapping(uint256 => string) private _metaUrl;
 
@@ -22,11 +21,9 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
         address creator,
         uint256 feeRate
     ) ERC721(name, symbol) {
-        _name = name;
         _owner = msg.sender;
         _creator = creator;
         _feeRate = feeRate;
-        _name = name;
     }
 
     /*
@@ -36,13 +33,13 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
     function mint(address to, string memory metaUrl) public {
         require(
             (!_creatorOnly || msg.sender == _creator || msg.sender == _owner),
-            "this NFT is can mint creator only"
+            "Only the creator can mint this NFT"
         );
         _lastTokenId++;
         uint256 tokenId = _lastTokenId;
         _metaUrl[tokenId] = metaUrl;
         _mint(to, tokenId);
-        _setTokenRoyalty(tokenId, _creator, _feeRate * 100); //100 = 1%
+        _setTokenRoyalty(tokenId, _creator, _feeRate * 100); // 100 = 1%
     }
 
     /*
@@ -51,7 +48,13 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
      */
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC721Enumerable, RoyaltyStandard) returns (bool) {
+    )
+        public
+        view
+        virtual
+        override(ERC721Enumerable, RoyaltyStandard)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId);
     }
 
@@ -59,7 +62,7 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
         uint256 tokenId
     ) public view virtual override returns (string memory) {
         _requireMinted(tokenId);
-        return string(abi.encodePacked(_metaUrl[tokenId]));
+        return _metaUrl[tokenId];
     }
 
     function setConfig(
