@@ -19,7 +19,7 @@ contract donateManage {
     uint256 public _allTotalDonations;
     uint256 public _allUsedPoints;
 
-    // New mappings for sender history
+
     struct Donation {
         uint256 amount;
         uint256 date;
@@ -32,9 +32,16 @@ contract donateManage {
         uint256 date;
         string detail;
     }
+
+    struct UsePoints {
+        uint256 amount;
+        uint256 date;
+        string detail;
+    }
     
     mapping(address => Donation[]) public _donationHistory;
     mapping(address => SubstituteDonation[]) public _substituteDonationHistory;
+    mapping(address => UsePoints[]) public _usePointsHistory;
 
     constructor() {
         _owner = msg.sender;
@@ -137,6 +144,21 @@ contract donateManage {
         _useDates.push(block.timestamp);
         _usedPoints[donor] += usepoint;
         _allUsedPoints += usepoint;
+        _usePointsHistory[donor].push(UsePoints(usepoint, block.timestamp, "NO_DETAIL"));
+    }
+
+    function usePoint(address donor, uint256 usepoint, string memory detail) external {
+        require(
+            _totalDonations[donor] - _usedPoints[donor] >= usepoint,
+            "not enough points"
+        );
+        _lastUseId++;
+        _useDonors.push(donor);
+        _usePoints.push(usepoint);
+        _useDates.push(block.timestamp);
+        _usedPoints[donor] += usepoint;
+        _allUsedPoints += usepoint;
+        _usePointsHistory[donor].push(UsePoints(usepoint, block.timestamp, detail));
     }
 
     function latestPoint(address donor) external view returns (uint256) {
