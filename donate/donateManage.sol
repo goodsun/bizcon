@@ -23,9 +23,18 @@ contract donateManage {
     struct Donation {
         uint256 amount;
         uint256 date;
+        string detail;
+    }
+
+    struct SubstituteDonation {
+        uint256 amount;
+        address donor;
+        uint256 date;
+        string detail;
     }
     
     mapping(address => Donation[]) public _donationHistory;
+    mapping(address => SubstituteDonation[]) public _substituteDonationHistory;
 
     constructor() {
         _owner = msg.sender;
@@ -69,10 +78,10 @@ contract donateManage {
 
     receive() external payable {
         require(msg.value > 0, "Please send some Ether");
-        donate(msg.sender);
+        donate(msg.sender, "RECEIVE");
     }
 
-    function donate(address donor) public payable {
+    function donate(address donor, string memory detail) public payable {
         require(msg.value > 0, "Donation amount must be greater than zero");
         uint256 donateAmount = msg.value;
         _lastDonateId++;
@@ -84,10 +93,13 @@ contract donateManage {
         _allTotalDonations += donateAmount;
 
         // Add to donation history
-        _donationHistory[msg.sender].push(Donation(donateAmount, block.timestamp));
+        _donationHistory[donor].push(Donation(donateAmount, block.timestamp, detail));
+        if (msg.sender != donor) {
+          _substituteDonationHistory[msg.sender].push(SubstituteDonation(donateAmount, donor, block.timestamp, detail));
+        }
     }
 
-    function donate(address donor, uint256 gasCashback) public payable {
+    function donate(address donor, string memory detail, uint256 gasCashback) public payable {
         require(msg.value > 0, "Donation amount must be greater than zero");
         require(
             msg.value > gasCashback,
@@ -108,7 +120,10 @@ contract donateManage {
         _allTotalDonations += donateAmount;
 
         // Add to donation history
-        _donationHistory[msg.sender].push(Donation(donateAmount, block.timestamp));
+        _donationHistory[donor].push(Donation(donateAmount, block.timestamp, detail));
+        if (msg.sender != donor) {
+          _substituteDonationHistory[msg.sender].push(SubstituteDonation(donateAmount, donor, block.timestamp, detail));
+        }
     }
 
     function usePoint(address donor, uint256 usepoint) external {
@@ -177,5 +192,9 @@ contract donateManage {
     // New function to get donation history for a specific sender
     function getDonationHistory(address sender) external view returns (Donation[] memory) {
         return _donationHistory[sender];
+    }
+    // New function to get donation history for a specific sender
+    function getsubstituteDonationHistory(address sender) external view returns (SubstituteDonation[] memory) {
+        return _substituteDonationHistory[sender];
     }
 }
