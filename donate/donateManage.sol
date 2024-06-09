@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
+
 // DonateManager
 contract donateManage {
     address public _owner;
@@ -17,6 +18,14 @@ contract donateManage {
     mapping(address => uint256) public _usedPoints;
     uint256 public _allTotalDonations;
     uint256 public _allUsedPoints;
+
+    // New mappings for sender history
+    struct Donation {
+        uint256 amount;
+        uint256 date;
+    }
+    
+    mapping(address => Donation[]) public _donationHistory;
 
     constructor() {
         _owner = msg.sender;
@@ -73,6 +82,9 @@ contract donateManage {
         _donationDates.push(block.timestamp);
         _totalDonations[donor] += donateAmount;
         _allTotalDonations += donateAmount;
+
+        // Add to donation history
+        _donationHistory[msg.sender].push(Donation(donateAmount, block.timestamp));
     }
 
     function donate(address donor, uint256 gasCashback) public payable {
@@ -94,6 +106,9 @@ contract donateManage {
         _donationDates.push(block.timestamp);
         _totalDonations[donor] += donateAmount;
         _allTotalDonations += donateAmount;
+
+        // Add to donation history
+        _donationHistory[msg.sender].push(Donation(donateAmount, block.timestamp));
     }
 
     function usePoint(address donor, uint256 usepoint) external {
@@ -157,5 +172,10 @@ contract donateManage {
         uint256 /* amount */
     ) external pure returns (bool) {
         revert("Token transfers are disabled");
+    }
+
+    // New function to get donation history for a specific sender
+    function getDonationHistory(address sender) external view returns (Donation[] memory) {
+        return _donationHistory[sender];
     }
 }
