@@ -7,65 +7,57 @@ import "../donate/donateManage.sol";
 
 contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     uint256 public _lastTokenId;
-    address public _creator;
     address public _owner;
     string private _name;
     uint256 public _usePoint;
+    uint256 public _feeRate;
     mapping(uint256 => string) private _metaUrl;
     address payable private _donateManageAddress;
     donateManage private _donateManageContract;
 
     /*
-     * name NFT名称;
-     * symbol 単位
-     */
+    * name NFT名称
+    * symbol 単位
+    */
     constructor(
         address payable donateManageAddress,
         string memory name,
-        string memory symbol
+        string memory symbol,
+        uint256 feeRate
     ) ERC721(name, symbol) {
         _name = name;
-        _owner = msg.sender;
+		_owner = msg.sender;
         _name = name;
+        _feeRate = feeRate;
         _donateManageAddress = donateManageAddress;
         _donateManageContract = donateManage(_donateManageAddress);
         _usePoint = 5 ether;
     }
 
     /*
-     * to 転送先
-     * metaUrl メタ情報URL
-     */
-    function mint(address to, string memory metaUrl) external {
-        //デフォルトを設定しfeeRateをオプショナルにする
-        mint(to, metaUrl, 0);
-    }
-
-    function mint(address to, string memory metaUrl, uint256 feeRate) public {
+    * to 転送先
+    * metaUrl メタ情報URL
+    */
+    function mint(address to, string memory metaUrl) public {
         uint256 usepoint = _usePoint;
         uint256 availablePoints = _donateManageContract.latestPoint(msg.sender);
-        require(
-            availablePoints >= usepoint,
-            "You do not have enough points to mint"
-        );
+        require(availablePoints >= usepoint, "You do not have enough points to mint");
 
         // Update usedPoints
         _donateManageContract.usePoint(msg.sender, usepoint);
 
-        _lastTokenId++;
+        _lastTokenId ++;
         uint256 tokenId = _lastTokenId;
         _metaUrl[tokenId] = metaUrl;
         _mint(to, tokenId);
-        _setTokenRoyalty(tokenId, msg.sender, feeRate * 100);
+        _setTokenRoyalty(tokenId, msg.sender, _feeRate * 100);
     }
 
     /*
-     * ERC721 0x80ac58cd
-     * ERC165 0x01ffc9a7 (RoyaltyStandard)
-     */
-    function supportsInterface(
-        bytes4 interfaceId
-    )
+    * ERC721 0x80ac58cd
+    * ERC165 0x01ffc9a7 (RoyaltyStandard)
+    */
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
@@ -75,27 +67,22 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
         return super.supportsInterface(interfaceId);
     }
 
-    function tokenURI(
-        uint256 tokenId
-    ) public view virtual override returns (string memory) {
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         _requireMinted(tokenId);
         return string(abi.encodePacked(_metaUrl[tokenId]));
     }
 
     function setConfig(uint256 usePoint) external {
-        require(_owner == msg.sender, "Can't set. owner only");
+        require(_owner == msg.sender ,"Can't set. owner only");
         _usePoint = usePoint;
     }
 
     function getInfo() external view returns (address, uint256, bool) {
-        return (_creator, _lastTokenId, false);
+        return (_owner, _lastTokenId, false);
     }
 
     function burn(uint256 tokenId) external {
-        require(
-            _isApprovedOrOwner(_msgSender(), tokenId),
-            "Caller is not owner nor approved"
-        );
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "Caller is not owner nor approved");
         _metaUrl[tokenId] = "";
         _burn(tokenId);
     }
