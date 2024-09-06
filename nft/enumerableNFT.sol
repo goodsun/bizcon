@@ -24,6 +24,7 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
         _owner = msg.sender;
         _creator = creator;
         _feeRate = feeRate;
+        _creatorOnly = true;
     }
 
     /*

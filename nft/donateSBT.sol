@@ -38,7 +38,7 @@ contract donateSBT is ERC721Enumerable {
         _lastTokenId++;
         uint256 tokenId = _lastTokenId;
         _metaUrl[tokenId] = metaUrl;
-        _safeMint(to, tokenId);
+        _mint(to, tokenId);
     }
 
     function tokenURI(
@@ -58,10 +58,7 @@ contract donateSBT is ERC721Enumerable {
     }
 
     function burn(uint256 tokenId) external {
-        require(
-            _isApprovedOrOwner(_msgSender(), tokenId),
-            "Caller is not owner nor approved"
-        );
+        require(_owner == msg.sender, "Can't set. owner only");
         _metaUrl[tokenId] = "";
         _burn(tokenId);
     }

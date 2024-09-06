@@ -2,11 +2,12 @@
 pragma solidity ^0.8.0;
 import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
-contract enumerableSBT is ERC721Enumerable {
+contract multiCreatorSBT is ERC721Enumerable {
     bool public _creatorOnly;
-    address public _creator;
     uint256 public _lastTokenId;
+    uint256 public _lastCreator;
     address public _owner;
+    mapping(uint256 => address) public _creators;
     mapping(uint256 => string) private _metaUrl;
     mapping(uint256 => bool) private _lockedTokens;
 
@@ -20,8 +21,26 @@ contract enumerableSBT is ERC721Enumerable {
         address creator
     ) ERC721(name, symbol) {
         _owner = msg.sender;
-        _creator = creator;
+        _lastCreator = 1;
+        _creators[1] = creator;
         _creatorOnly = true;
+    }
+
+    function _creator() external view returns (address) {
+        if (_isInCreators(msg.sender)) {
+            return msg.sender;
+        } else {
+            return _owner;
+        }
+    }
+
+    function _isInCreators(address account) internal view returns (bool) {
+        for (uint256 i = 1; i <= _lastCreator; i++) {
+            if (_creators[i] == account) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /*
@@ -30,8 +49,8 @@ contract enumerableSBT is ERC721Enumerable {
      */
     function mint(address to, string memory metaUrl) public {
         require(
-            (!_creatorOnly || msg.sender == _creator || msg.sender == _owner),
-            "Only the creator can mint this NFT"
+            (!_creatorOnly || _isInCreators(msg.sender) || msg.sender == _owner),
+            "Only the creator can mint this SBT"
         );
         _lastTokenId++;
         uint256 tokenId = _lastTokenId;
@@ -56,14 +75,23 @@ contract enumerableSBT is ERC721Enumerable {
         return _metaUrl[tokenId];
     }
 
-    function setConfig(address creator, bool creatorOnly) external {
+    function setCreator(address creator) external {
         require(_owner == msg.sender, "Can't set. owner only");
-        _creator = creator;
-        _creatorOnly = creatorOnly;
+        _lastCreator ++;
+        _creators[_lastCreator] = creator;
+    }
+
+    function delCreator(uint256 creatorId) external {
+        require(_owner == msg.sender, "Can't set. owner only");
+        _creators[creatorId] = 0x000000000000000000000000000000000000dEaD;
     }
 
     function getInfo() external view returns (address, uint256, bool) {
-        return (_creator, _lastTokenId, _creatorOnly);
+        if (_isInCreators(msg.sender)) {
+            return (msg.sender, _lastTokenId, true);
+        } else {
+            return (_owner, _lastTokenId, true);
+        }
     }
 
     function burn(uint256 tokenId) external {
