@@ -37,6 +37,7 @@ contract enumerableSBT is ERC721Enumerable {
         uint256 tokenId = _lastTokenId;
         _metaUrl[tokenId] = metaUrl;
         _mint(to, tokenId);
+        _lockedTokens[tokenId] = true;
     }
 
     /*
@@ -67,8 +68,9 @@ contract enumerableSBT is ERC721Enumerable {
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender, "Can't set. owner only");
+        require(_owner == msg.sender || _isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
         _metaUrl[tokenId] = "";
+        _lockedTokens[tokenId] = false;
         _burn(tokenId);
     }
 
@@ -85,7 +87,7 @@ contract enumerableSBT is ERC721Enumerable {
             _isApprovedOrOwner(_msgSender(), tokenId),
             "Caller is not owner nor approved"
         );
-        _lockedTokens[tokenId] = false;
+        _lockedTokens[tokenId] = true;
     }
 
     function _beforeTokenTransfer(
