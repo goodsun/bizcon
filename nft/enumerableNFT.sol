@@ -4,6 +4,8 @@ import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/tok
 import "./RoyaltyStandard.sol";
 
 contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
+    string private _customName;
+    string private _customSymbol;
     bool public _creatorOnly;
     address public _creator;
     uint256 public _lastTokenId;
@@ -16,11 +18,13 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
      * symbol 単位
      */
     constructor(
-        string memory name,
-        string memory symbol,
+        string memory _name,
+        string memory _symbol,
         address creator,
         uint256 feeRate
-    ) ERC721(name, symbol) {
+    ) ERC721(_name, _symbol) {
+        _customName = _name;
+        _customSymbol = _symbol;
         _owner = msg.sender;
         _creator = creator;
         _feeRate = feeRate;
@@ -75,6 +79,20 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
         _creator = creator;
         _feeRate = feeRate;
         _creatorOnly = creatorOnly;
+    }
+
+    function name() public view override returns (string memory) {
+        return _customName;
+    }
+
+    function symbol() public view override returns (string memory) {
+        return _customSymbol;
+    }
+
+    function setName(string memory newName,string memory newSymbol  ) external {
+        require(_owner == msg.sender, "Can't set. owner only");
+        _customName = newName;
+        _customSymbol = newSymbol;
     }
 
     function getInfo() external view returns (address, uint256, bool) {

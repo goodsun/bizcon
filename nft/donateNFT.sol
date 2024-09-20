@@ -6,9 +6,10 @@ import "./RoyaltyStandard.sol";
 import "../donate/donateManage.sol";
 
 contract donateNFT is ERC721Enumerable, RoyaltyStandard {
+    string private _customName;
+    string private _customSymbol;
     uint256 public _lastTokenId;
     address public _owner;
-    string private _name;
     uint256 public _usePoint;
     uint256 public _feeRate;
     mapping(uint256 => string) private _metaUrl;
@@ -21,13 +22,13 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     */
     constructor(
         address payable donateManageAddress,
-        string memory name,
-        string memory symbol,
+        string memory _name,
+        string memory _symbol,
         uint256 feeRate
-    ) ERC721(name, symbol) {
-        _name = name;
+    ) ERC721(_name, _symbol) {
+        _customName = _name;
+        _customSymbol = _symbol;
 		_owner = msg.sender;
-        _name = name;
         _feeRate = feeRate;
         _donateManageAddress = donateManageAddress;
         _donateManageContract = donateManage(_donateManageAddress);
@@ -75,6 +76,20 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     function setConfig(uint256 usePoint) external {
         require(_owner == msg.sender ,"Can't set. owner only");
         _usePoint = usePoint;
+    }
+
+    function name() public view override returns (string memory) {
+        return _customName;
+    }
+
+    function symbol() public view override returns (string memory) {
+        return _customSymbol;
+    }
+
+    function setName(string memory newName,string memory newSymbol  ) external {
+        require(_owner == msg.sender, "Can't set. owner only");
+        _customName = newName;
+        _customSymbol = newSymbol;
     }
 
     function getInfo() external view returns (address, uint256, bool) {

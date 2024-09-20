@@ -5,6 +5,8 @@ import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/tok
 import "../donate/donateManage.sol";
 
 contract memberDonateSBT is ERC721Enumerable {
+    string private _customName;
+    string private _customSymbol;
     address public _owner;
     uint256 public _lastTokenId;
     uint256 public _usePoint;
@@ -21,6 +23,8 @@ contract memberDonateSBT is ERC721Enumerable {
         string memory _symbol,
         string memory website
     ) ERC721(_name, _symbol) {
+         _customName = _name;
+        _customSymbol = _symbol;
         _owner = msg.sender;
         _donateManageAddress = donateManageAddress;
         _donateManageContract = donateManage(_donateManageAddress);
@@ -70,28 +74,26 @@ contract memberDonateSBT is ERC721Enumerable {
         _usePoint = usePoint;
     }
 
+    function name() public view override returns (string memory) {
+        return _customName;
+    }
+
+    function symbol() public view override returns (string memory) {
+        return _customSymbol;
+    }
+
+    function setName(string memory newName,string memory newSymbol  ) external {
+        require(_owner == msg.sender, "Can't set. owner only");
+        _customName = newName;
+        _customSymbol = newSymbol;
+    }
+
     function burn(uint256 tokenId) external {
         require(_owner == msg.sender || _isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
         _discordEoa[_metaUrl[tokenId]] = 0x0000000000000000000000000000000000000000;
         _metaUrl[tokenId] = "";
         _lockedTokens[tokenId] = false;
         _burn(tokenId);
-    }
-
-    function lockTransfer(uint256 tokenId) external {
-        require(
-            _isApprovedOrOwner(_msgSender(), tokenId),
-            "Caller is not owner nor approved"
-        );
-        _lockedTokens[tokenId] = true;
-    }
-
-    function unlockTransfer(uint256 tokenId) external {
-        require(
-            _isApprovedOrOwner(_msgSender(), tokenId),
-            "Caller is not owner nor approved"
-        );
-        _lockedTokens[tokenId] = false;
     }
 
     function _beforeTokenTransfer(

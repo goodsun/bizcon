@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 contract enumerableSBT is ERC721Enumerable {
+    string private _customName;
+    string private _customSymbol;
     bool public _creatorOnly;
     address public _creator;
     uint256 public _lastTokenId;
@@ -15,10 +17,12 @@ contract enumerableSBT is ERC721Enumerable {
      * symbol 単位
      */
     constructor(
-        string memory name,
-        string memory symbol,
+        string memory _name,
+        string memory _symbol,
         address creator
-    ) ERC721(name, symbol) {
+    ) ERC721(_name, _symbol) {
+        _customName = _name;
+        _customSymbol = _symbol;
         _owner = msg.sender;
         _creator = creator;
         _creatorOnly = true;
@@ -63,31 +67,29 @@ contract enumerableSBT is ERC721Enumerable {
         _creatorOnly = creatorOnly;
     }
 
+    function name() public view override returns (string memory) {
+        return _customName;
+    }
+
+    function symbol() public view override returns (string memory) {
+        return _customSymbol;
+    }
+
+    function setName(string memory newName,string memory newSymbol  ) external {
+        require(_owner == msg.sender, "Can't set. owner only");
+        _customName = newName;
+        _customSymbol = newSymbol;
+    }
+
     function getInfo() external view returns (address, uint256, bool) {
         return (_creator, _lastTokenId, _creatorOnly);
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender || _isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
+        require(_owner == msg.sender || _owner == _creator || _isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
         _metaUrl[tokenId] = "";
         _lockedTokens[tokenId] = false;
         _burn(tokenId);
-    }
-
-    function lockTransfer(uint256 tokenId) external {
-        require(
-            _isApprovedOrOwner(_msgSender(), tokenId),
-            "Caller is not owner nor approved"
-        );
-        _lockedTokens[tokenId] = true;
-    }
-
-    function unlockTransfer(uint256 tokenId) external {
-        require(
-            _isApprovedOrOwner(_msgSender(), tokenId),
-            "Caller is not owner nor approved"
-        );
-        _lockedTokens[tokenId] = true;
     }
 
     function _beforeTokenTransfer(
