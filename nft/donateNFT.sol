@@ -97,7 +97,7 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender || _isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
+        require(_isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
         _metaUrl[tokenId] = "";
         _burn(tokenId);
     }

@@ -11,6 +11,7 @@ contract enumerableSBT is ERC721Enumerable {
     address public _owner;
     mapping(uint256 => string) private _metaUrl;
     mapping(uint256 => bool) private _lockedTokens;
+    mapping(uint256 => address) private _minter;
 
     /*
      * name NFT名称
@@ -40,8 +41,16 @@ contract enumerableSBT is ERC721Enumerable {
         _lastTokenId++;
         uint256 tokenId = _lastTokenId;
         _metaUrl[tokenId] = metaUrl;
+        _minter[tokenId] = msg.sender;
         _mint(to, tokenId);
         _lockedTokens[tokenId] = true;
+    }
+
+    function minter(
+        uint256 tokenId
+    ) external view returns (address) {
+        _requireMinted(tokenId);
+        return _minter[tokenId];
     }
 
     /*
@@ -86,7 +95,7 @@ contract enumerableSBT is ERC721Enumerable {
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender || _creator == msg.sender , "Can't burn. owner only");
+        require(_owner == msg.sender || _minter[tokenId] == msg.sender , "Can't burn. owner only");
         _metaUrl[tokenId] = "";
         _lockedTokens[tokenId] = false;
         _burn(tokenId);

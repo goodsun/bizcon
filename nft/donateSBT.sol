@@ -14,6 +14,7 @@ contract donateSBT is ERC721Enumerable {
     address payable private _donateManageAddress;
     donateManage private _donateManageContract;
     mapping(uint256 => bool) private _lockedTokens;
+    mapping(uint256 => address) private _minter;
 
     constructor(
         address payable donateManageAddress,
@@ -42,8 +43,16 @@ contract donateSBT is ERC721Enumerable {
         _lastTokenId++;
         uint256 tokenId = _lastTokenId;
         _metaUrl[tokenId] = metaUrl;
+        _minter[tokenId] = msg.sender;
         _mint(to, tokenId);
         _lockedTokens[tokenId] = true;
+    }
+
+    function minter(
+        uint256 tokenId
+    ) external view returns (address) {
+        _requireMinted(tokenId);
+        return _minter[tokenId];
     }
 
     function tokenURI(
@@ -77,7 +86,7 @@ contract donateSBT is ERC721Enumerable {
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender , "Can't burn. owner only");
+        require(_owner == msg.sender || _minter[tokenId] == msg.sender , "Can't burn. owner only");
         _metaUrl[tokenId] = "";
         _lockedTokens[tokenId] = false;
         _burn(tokenId);
