@@ -68,8 +68,9 @@ contract memberDonateSBT is ERC721Enumerable {
         return (_owner, _lastTokenId, false);
     }
 
-    function setConfig(uint256 usePoint, string memory website) external {
+    function setConfig(address owner, uint256 usePoint, string memory website) external {
         require(_owner == msg.sender, "Can't set. owner only");
+        _owner = owner;
         _website = website;
         _usePoint = usePoint;
     }

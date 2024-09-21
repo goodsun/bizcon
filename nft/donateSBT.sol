@@ -20,12 +20,11 @@ contract donateSBT is ERC721Enumerable {
     constructor(
         address payable donateManageAddress,
         string memory _name,
-        string memory _symbol,
-        bool minterDelete
+        string memory _symbol
     ) ERC721(_name, _symbol) {
         _customName = _name;
         _customSymbol = _symbol;
-        _minterDelete = minterDelete;
+        _minterDelete = false;
         _owner = msg.sender;
         _donateManageAddress = donateManageAddress;
         _donateManageContract = donateManage(_donateManageAddress);
@@ -69,9 +68,11 @@ contract donateSBT is ERC721Enumerable {
         return (_owner, _lastTokenId, false);
     }
 
-    function setConfig(uint256 usePoint) external {
+    function setConfig(address owner, uint256 usePoint, bool minterDelete) external {
         require(_owner == msg.sender, "Can't set. owner only");
+        _owner = owner;
         _usePoint = usePoint;
+        _minterDelete = minterDelete;
     }
 
     function name() public view override returns (string memory) {
@@ -89,10 +90,18 @@ contract donateSBT is ERC721Enumerable {
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender || (_minter[tokenId] == msg.sender || _minterDelete) , "Can't burn. owner only");
+        require(_owner == msg.sender || (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
         _metaUrl[tokenId] = "";
         _lockedTokens[tokenId] = false;
         _burn(tokenId);
+    }
+
+   function burnable(uint256 tokenId) external view returns (bool) {
+        require(_owner == msg.sender || (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
+        if(_minter[tokenId] == 0x0000000000000000000000000000000000000000){
+          return false;
+        }
+        return true;
     }
 
     function _beforeTokenTransfer(

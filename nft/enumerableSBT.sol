@@ -9,6 +9,7 @@ contract enumerableSBT is ERC721Enumerable {
     address public _creator;
     uint256 public _lastTokenId;
     address public _owner;
+    bool public _minterDelete;
     mapping(uint256 => string) private _metaUrl;
     mapping(uint256 => bool) private _lockedTokens;
     mapping(uint256 => address) private _minter;
@@ -20,12 +21,11 @@ contract enumerableSBT is ERC721Enumerable {
     constructor(
         string memory _name,
         string memory _symbol,
-        address creator,
-        bool minterDelete
+        address creator
     ) ERC721(_name, _symbol) {
         _customName = _name;
         _customSymbol = _symbol;
-        _minterDelete = minterDelete;
+        _minterDelete = false;
         _owner = msg.sender;
         _creator = creator;
         _creatorOnly = true;
@@ -72,8 +72,9 @@ contract enumerableSBT is ERC721Enumerable {
         return _metaUrl[tokenId];
     }
 
-    function setConfig(address creator, bool creatorOnly, bool minterDelete) external {
+    function setConfig(address owner, address creator, bool creatorOnly, bool minterDelete) external {
         require(_owner == msg.sender, "Can't set. owner only");
+        _owner = owner;
         _creator = creator;
         _creatorOnly = creatorOnly;
         _minterDelete = minterDelete;
@@ -98,10 +99,18 @@ contract enumerableSBT is ERC721Enumerable {
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender || (_minter[tokenId] == msg.sender || _minterDelete) , "Can't burn. owner only");
+        require(_owner == msg.sender || (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
         _metaUrl[tokenId] = "";
         _lockedTokens[tokenId] = false;
         _burn(tokenId);
+    }
+
+   function burnable(uint256 tokenId) external view returns (bool) {
+        require(_owner == msg.sender || (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
+        if(_minter[tokenId] == 0x0000000000000000000000000000000000000000){
+          return false;
+        }
+        return true;
     }
 
     function _beforeTokenTransfer(

@@ -106,4 +106,9 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
         _metaUrl[tokenId] = "";
         _burn(tokenId);
     }
+
+    function burnable(uint256 tokenId) external view returns (bool) {
+        require(_isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
+        return true;
+    }
 }

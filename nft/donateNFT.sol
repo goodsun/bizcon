@@ -13,7 +13,7 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     uint256 public _usePoint;
     uint256 public _feeRate;
     mapping(uint256 => string) private _metaUrl;
-    address payable private _donateManageAddress;
+    address payable public _donateManageAddress;
     donateManage private _donateManageContract;
 
     /*
@@ -73,8 +73,9 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
         return string(abi.encodePacked(_metaUrl[tokenId]));
     }
 
-    function setConfig(uint256 usePoint) external {
+    function setConfig(address owner, uint256 usePoint) external {
         require(_owner == msg.sender ,"Can't set. owner only");
+        _owner = owner;
         _usePoint = usePoint;
     }
 
@@ -100,5 +101,10 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
         require(_isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
         _metaUrl[tokenId] = "";
         _burn(tokenId);
+    }
+
+    function burnable(uint256 tokenId) external view returns (bool) {
+        require(_isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
+        return true;
     }
 }
