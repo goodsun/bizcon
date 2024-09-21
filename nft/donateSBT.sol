@@ -10,6 +10,7 @@ contract donateSBT is ERC721Enumerable {
     address public _owner;
     uint256 public _lastTokenId;
     uint256 public _usePoint;
+    bool public _minterDelete;
     mapping(uint256 => string) private _metaUrl;
     address payable private _donateManageAddress;
     donateManage private _donateManageContract;
@@ -19,10 +20,12 @@ contract donateSBT is ERC721Enumerable {
     constructor(
         address payable donateManageAddress,
         string memory _name,
-        string memory _symbol
+        string memory _symbol,
+        bool minterDelete
     ) ERC721(_name, _symbol) {
         _customName = _name;
         _customSymbol = _symbol;
+        _minterDelete = minterDelete;
         _owner = msg.sender;
         _donateManageAddress = donateManageAddress;
         _donateManageContract = donateManage(_donateManageAddress);
@@ -86,7 +89,7 @@ contract donateSBT is ERC721Enumerable {
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender || _minter[tokenId] == msg.sender , "Can't burn. owner only");
+        require(_owner == msg.sender || (_minter[tokenId] == msg.sender || _minterDelete) , "Can't burn. owner only");
         _metaUrl[tokenId] = "";
         _lockedTokens[tokenId] = false;
         _burn(tokenId);

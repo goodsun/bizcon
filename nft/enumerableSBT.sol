@@ -20,10 +20,12 @@ contract enumerableSBT is ERC721Enumerable {
     constructor(
         string memory _name,
         string memory _symbol,
-        address creator
+        address creator,
+        bool minterDelete
     ) ERC721(_name, _symbol) {
         _customName = _name;
         _customSymbol = _symbol;
+        _minterDelete = minterDelete;
         _owner = msg.sender;
         _creator = creator;
         _creatorOnly = true;
@@ -70,10 +72,11 @@ contract enumerableSBT is ERC721Enumerable {
         return _metaUrl[tokenId];
     }
 
-    function setConfig(address creator, bool creatorOnly) external {
+    function setConfig(address creator, bool creatorOnly, bool minterDelete) external {
         require(_owner == msg.sender, "Can't set. owner only");
         _creator = creator;
         _creatorOnly = creatorOnly;
+        _minterDelete = minterDelete;
     }
 
     function name() public view override returns (string memory) {
@@ -95,7 +98,7 @@ contract enumerableSBT is ERC721Enumerable {
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender || _minter[tokenId] == msg.sender , "Can't burn. owner only");
+        require(_owner == msg.sender || (_minter[tokenId] == msg.sender || _minterDelete) , "Can't burn. owner only");
         _metaUrl[tokenId] = "";
         _lockedTokens[tokenId] = false;
         _burn(tokenId);
