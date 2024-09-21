@@ -71,11 +71,13 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
     }
 
     function setConfig(
+        address owner,
         address creator,
         uint256 feeRate,
         bool creatorOnly
     ) external {
         require(_owner == msg.sender, "Can't set. owner only");
+        _owner = owner;
         _creator = creator;
         _feeRate = feeRate;
         _creatorOnly = creatorOnly;

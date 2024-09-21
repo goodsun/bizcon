@@ -86,7 +86,7 @@ contract enumerableSBT is ERC721Enumerable {
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender || _owner == _creator || _isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
+        require(_owner == msg.sender || _creator == msg.sender , "Can't burn. owner only");
         _metaUrl[tokenId] = "";
         _lockedTokens[tokenId] = false;
         _burn(tokenId);
