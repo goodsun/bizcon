@@ -15,31 +15,39 @@ contract manage {
         _admins.push(msg.sender);
     }
 
-    function checkUser() external view returns (string memory) {
+    function checkUser() public view returns (string memory) {
+        return checkUser(msg.sender);
+    }
+
+    function checkUser(address sender) public view returns (string memory) {
         for (uint i = 0; i < _admins.length; i++) {
-            if (_admins[i] == msg.sender) {
+            if (_admins[i] == sender) {
                 return "admin";
             }
         }
         for (uint i = 0; i < _creators.length; i++) {
-            if (_creators[i] == msg.sender) {
+            if (_creators[i] == sender) {
                 return "creator";
             }
         }
         return "user";
     }
 
-    function chkAdmin() internal view returns (bool) {
+    function chkAdmin() public view returns (bool){
+        return chkAdmin(msg.sender);
+    }
+
+    function chkAdmin(address sender) public view returns (bool){
         bool val = false;
         for (uint i = 0; i < _admins.length; i++) {
-            if (_admins[i] == msg.sender) {
+            if (_admins[i] == sender) {
                 val = true;
             }
         }
         return val;
     }
 
-    function chkExist(address account) internal view returns (bool) {
+    function chkExist(address account) public view returns (bool) {
         bool val = false;
         for (uint i = 0; i < _contracts.length; i++) {
             if (_contracts[i] == account) {
@@ -49,7 +57,7 @@ contract manage {
         return val;
     }
 
-    function chkCreatorExist(address account) internal view returns (bool) {
+    function chkCreatorExist(address account) public view returns (bool) {
         bool val = false;
         for (uint i = 0; i < _creators.length; i++) {
             if (_creators[i] == account) {

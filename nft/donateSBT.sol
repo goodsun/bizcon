@@ -3,8 +3,11 @@ pragma solidity ^0.8.13;
 
 import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "../donate/donateManage.sol";
+import "../manage/manage.sol";
 
 contract donateSBT is ERC721Enumerable {
+    address private _manageAddress;
+    manage private _manageContract;
     string private _customName;
     string private _customSymbol;
     address public _owner;
@@ -18,6 +21,7 @@ contract donateSBT is ERC721Enumerable {
     mapping(uint256 => address) private _minter;
 
     constructor(
+        address manageAddress,
         address payable donateManageAddress,
         string memory _name,
         string memory _symbol
@@ -26,6 +30,8 @@ contract donateSBT is ERC721Enumerable {
         _customSymbol = _symbol;
         _minterDelete = false;
         _owner = msg.sender;
+        _manageAddress = manageAddress;
+        _manageContract = manage(_manageAddress);
         _donateManageAddress = donateManageAddress;
         _donateManageContract = donateManage(_donateManageAddress);
         _usePoint = 2 ether;
@@ -81,6 +87,10 @@ contract donateSBT is ERC721Enumerable {
 
     function symbol() public view override returns (string memory) {
         return _customSymbol;
+    }
+
+    function getAdmins() public view returns (bool) {
+        return _manageContract.chkAdmin(msg.sender);
     }
 
     function setName(string memory newName,string memory newSymbol  ) external {
