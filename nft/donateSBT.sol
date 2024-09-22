@@ -8,6 +8,8 @@ import "../manage/manage.sol";
 contract donateSBT is ERC721Enumerable {
     address private _manageAddress;
     manage private _manageContract;
+    address payable private _donateManageAddress;
+    donateManage private _donateManageContract;
     string private _customName;
     string private _customSymbol;
     address public _owner;
@@ -15,8 +17,6 @@ contract donateSBT is ERC721Enumerable {
     uint256 public _usePoint;
     bool public _minterDelete;
     mapping(uint256 => string) private _metaUrl;
-    address payable private _donateManageAddress;
-    donateManage private _donateManageContract;
     mapping(uint256 => bool) private _lockedTokens;
     mapping(uint256 => address) private _minter;
 
@@ -75,7 +75,7 @@ contract donateSBT is ERC721Enumerable {
     }
 
     function setConfig(address owner, uint256 usePoint, bool minterDelete) external {
-        require(_owner == msg.sender, "Can't set. owner only");
+        require(_owner == msg.sender || checkAdmin(), "Can't set. owner only");
         _owner = owner;
         _usePoint = usePoint;
         _minterDelete = minterDelete;
@@ -93,25 +93,21 @@ contract donateSBT is ERC721Enumerable {
         return _manageContract.chkAdmin(msg.sender);
     }
 
-    function checkAdmin() public view returns (address) {
-        return _manageContract._donateAddress;
-    }
-
     function setName(string memory newName,string memory newSymbol  ) external {
-        require(_owner == msg.sender, "Can't set. owner only");
+        require(_owner == msg.sender || checkAdmin(), "Can't set. owner only");
         _customName = newName;
         _customSymbol = newSymbol;
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender || (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
+        require(_owner == msg.sender || checkAdmin() || (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
         _metaUrl[tokenId] = "";
         _lockedTokens[tokenId] = false;
         _burn(tokenId);
     }
 
    function burnable(uint256 tokenId) external view returns (bool) {
-        require(_owner == msg.sender || (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
+        require(_owner == msg.sender || checkAdmin()|| (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
         if(_minter[tokenId] == 0x0000000000000000000000000000000000000000){
           return false;
         }
@@ -125,5 +121,14 @@ contract donateSBT is ERC721Enumerable {
     ) internal override {
         super._beforeTokenTransfer(from, to, tokenId);
         require(!_lockedTokens[tokenId], "Token transfer is locked");
+    }
+
+    function setDonateAddress(address payable donateManageAddress) external {
+        _donateManageAddress = donateManageAddress;
+        _donateManageContract = donateManage(_donateManageAddress);
+    }
+
+    function getDonateManageAddress() public view returns (address) {
+        return  _donateManageAddress;
     }
 }
