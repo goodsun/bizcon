@@ -89,8 +89,12 @@ contract donateSBT is ERC721Enumerable {
         return _customSymbol;
     }
 
-    function getAdmins() public view returns (bool) {
+    function checkAdmin() public view returns (bool) {
         return _manageContract.chkAdmin(msg.sender);
+    }
+
+    function checkAdmin() public view returns (address) {
+        return _manageContract._donateAddress;
     }
 
     function setName(string memory newName,string memory newSymbol  ) external {
