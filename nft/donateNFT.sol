@@ -4,8 +4,11 @@ pragma solidity ^0.8.0;
 import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "./RoyaltyStandard.sol";
 import "../donate/donateManage.sol";
+import "../manage/manage.sol";
 
 contract donateNFT is ERC721Enumerable, RoyaltyStandard {
+    address private _manageAddress;
+    manage private _manageContract;
     string private _customName;
     string private _customSymbol;
     uint256 public _lastTokenId;
@@ -21,6 +24,7 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     * symbol 単位
     */
     constructor(
+        address manageAddress,
         address payable donateManageAddress,
         string memory _name,
         string memory _symbol,
@@ -30,6 +34,8 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
         _customSymbol = _symbol;
 		_owner = msg.sender;
         _feeRate = feeRate;
+        _manageAddress = manageAddress;
+        _manageContract = manage(_manageAddress);
         _donateManageAddress = donateManageAddress;
         _donateManageContract = donateManage(_donateManageAddress);
         _usePoint = 5 ether;
@@ -74,7 +80,7 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     }
 
     function setConfig(address owner, uint256 usePoint) external {
-        require(_owner == msg.sender ,"Can't set. owner only");
+        require(_owner == msg.sender || checkAdmin(),"Can't set. owner only");
         _owner = owner;
         _usePoint = usePoint;
     }
@@ -87,8 +93,12 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
         return _customSymbol;
     }
 
+    function checkAdmin() public view returns (bool) {
+        return _manageContract.chkAdmin(msg.sender);
+    }
+
     function setName(string memory newName,string memory newSymbol  ) external {
-        require(_owner == msg.sender, "Can't set. owner only");
+        require(_owner == msg.sender || checkAdmin(),"Can't set. owner only");
         _customName = newName;
         _customSymbol = newSymbol;
     }
@@ -98,13 +108,23 @@ contract donateNFT is ERC721Enumerable, RoyaltyStandard {
     }
 
     function burn(uint256 tokenId) external {
-        require(_isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
+        require(_isApprovedOrOwner(_msgSender(), tokenId) || checkAdmin() , "Can't burn. owner only");
         _metaUrl[tokenId] = "";
         _burn(tokenId);
     }
 
     function burnable(uint256 tokenId) external view returns (bool) {
-        require(_isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
+        require(_isApprovedOrOwner(_msgSender(), tokenId) || checkAdmin() , "Can't burn. owner only");
         return true;
+    }
+
+    function setDonateAddress(address payable donateManageAddress) external {
+        require(_owner == msg.sender || checkAdmin(), "Can't set. owner only");
+        _donateManageAddress = donateManageAddress;
+        _donateManageContract = donateManage(_donateManageAddress);
+    }
+
+    function getDonateManageAddress() public view returns (address) {
+        return  _donateManageAddress;
     }
 }

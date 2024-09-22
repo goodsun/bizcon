@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: Apache License 2.0
 pragma solidity ^0.8.0;
 import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "../manage/manage.sol";
 
 contract enumerableSBT is ERC721Enumerable {
+    address private _manageAddress;
+    manage private _manageContract;
     string private _customName;
     string private _customSymbol;
     bool public _creatorOnly;
@@ -19,12 +22,15 @@ contract enumerableSBT is ERC721Enumerable {
      * symbol 単位
      */
     constructor(
+        address manageAddress,
         string memory _name,
         string memory _symbol,
         address creator
     ) ERC721(_name, _symbol) {
         _customName = _name;
         _customSymbol = _symbol;
+        _manageAddress = manageAddress;
+        _manageContract = manage(_manageAddress);
         _minterDelete = false;
         _owner = msg.sender;
         _creator = creator;
@@ -73,7 +79,7 @@ contract enumerableSBT is ERC721Enumerable {
     }
 
     function setConfig(address owner, address creator, bool creatorOnly, bool minterDelete) external {
-        require(_owner == msg.sender, "Can't set. owner only");
+        require(_owner == msg.sender || checkAdmin(), "Can't set. owner only");
         _owner = owner;
         _creator = creator;
         _creatorOnly = creatorOnly;
@@ -88,8 +94,12 @@ contract enumerableSBT is ERC721Enumerable {
         return _customSymbol;
     }
 
+    function checkAdmin() public view returns (bool) {
+        return _manageContract.chkAdmin(msg.sender);
+    }
+
     function setName(string memory newName,string memory newSymbol  ) external {
-        require(_owner == msg.sender, "Can't set. owner only");
+        require(_owner == msg.sender || checkAdmin(), "Can't set. owner only");
         _customName = newName;
         _customSymbol = newSymbol;
     }
@@ -99,14 +109,14 @@ contract enumerableSBT is ERC721Enumerable {
     }
 
     function burn(uint256 tokenId) external {
-        require(_owner == msg.sender || (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
+        require(_owner == msg.sender || checkAdmin() || (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
         _metaUrl[tokenId] = "";
         _lockedTokens[tokenId] = false;
         _burn(tokenId);
     }
 
    function burnable(uint256 tokenId) external view returns (bool) {
-        require(_owner == msg.sender || (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
+        require(_owner == msg.sender || checkAdmin() || (_minter[tokenId] == msg.sender && _minterDelete) , "Can't burn. minter only");
         if(_minter[tokenId] == 0x0000000000000000000000000000000000000000){
           return false;
         }

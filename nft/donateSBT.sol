@@ -124,6 +124,7 @@ contract donateSBT is ERC721Enumerable {
     }
 
     function setDonateAddress(address payable donateManageAddress) external {
+        require(_owner == msg.sender || checkAdmin(), "Can't set. owner only");
         _donateManageAddress = donateManageAddress;
         _donateManageContract = donateManage(_donateManageAddress);
     }

@@ -2,8 +2,11 @@
 pragma solidity ^0.8.0;
 import "github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.7.3/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "./RoyaltyStandard.sol";
+import "../manage/manage.sol";
 
 contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
+    address private _manageAddress;
+    manage private _manageContract;
     string private _customName;
     string private _customSymbol;
     bool public _creatorOnly;
@@ -18,6 +21,7 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
      * symbol 単位
      */
     constructor(
+        address manageAddress,
         string memory _name,
         string memory _symbol,
         address creator,
@@ -25,6 +29,8 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
     ) ERC721(_name, _symbol) {
         _customName = _name;
         _customSymbol = _symbol;
+        _manageAddress = manageAddress;
+        _manageContract = manage(_manageAddress);
         _owner = msg.sender;
         _creator = creator;
         _feeRate = feeRate;
@@ -37,7 +43,7 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
      */
     function mint(address to, string memory metaUrl) public {
         require(
-            (!_creatorOnly || msg.sender == _creator || msg.sender == _owner),
+            (!_creatorOnly || msg.sender == _creator || msg.sender == _owner || checkAdmin()),
             "Only the creator can mint this NFT"
         );
         _lastTokenId++;
@@ -76,7 +82,7 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
         uint256 feeRate,
         bool creatorOnly
     ) external {
-        require(_owner == msg.sender, "Can't set. owner only");
+        require(_owner == msg.sender || checkAdmin(), "Can't set. owner only");
         _owner = owner;
         _creator = creator;
         _feeRate = feeRate;
@@ -91,8 +97,12 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
         return _customSymbol;
     }
 
-    function setName(string memory newName,string memory newSymbol  ) external {
-        require(_owner == msg.sender, "Can't set. owner only");
+    function checkAdmin() public view returns (bool) {
+        return _manageContract.chkAdmin(msg.sender);
+    }
+
+    function setName(string memory newName,string memory newSymbol ) external {
+        require(_owner == msg.sender || checkAdmin(), "Can't set. owner only");
         _customName = newName;
         _customSymbol = newSymbol;
     }
@@ -111,4 +121,5 @@ contract enumerableNFT is ERC721Enumerable, RoyaltyStandard {
         require(_isApprovedOrOwner(_msgSender(), tokenId) , "Can't burn. owner only");
         return true;
     }
+
 }
